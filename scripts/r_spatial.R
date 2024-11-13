@@ -3,7 +3,8 @@
 
 rm(list = ls())
 # set the working directory where your GIS data are located
-setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
+setwd("C:/Users/Zita/Documents/Ecology &  Conservation/APCE2024/QGIS")
+
 
 # restore the libraries of the project 
 renv::restore()
@@ -23,28 +24,30 @@ library(patchwork)  # for combining multiple ggplots in one panel plot
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
 # Base R palettes
 barplot(rep(1,10), col = grey.colors(10))
-barplot(rep(1,10), col = rev(topo.colors(10))) # rev turns the scale arround
-barplot(rep(1,10), col = rev(terrain.colors(10)))
+grey.colors()
+mycolors <- c("red", "white", "blue" )
+mycolors
+barplot(rep(1,30), col = rev(topo.colors(10))) # rev turns the scale arround
+barplot(rep(1,10), col = rev(terrain.colors(10))) # rev means reverse the palette 
 library(RColorBrewer) 
 RColorBrewer::display.brewer.all()
 barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "Spectral"))
 
 barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "BrBG"))
 library(viridis)
-barplot(rep(1,10), col = viridis::viridis(10))
-barplot(rep(1,10), col = viridis::plasma(10))
-barplot(rep(1,10), col = viridis::heat(10))
+barplot(rep(1,10), col = rev(viridis::viridis(10))) # rainfall
+barplot(rep(1,10), col = viridis::plasma(10)) # heat
 viridis::plasma(10)
-library(wesanderson)
 barplot(rep(1,10), col = rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous")))
 pal_zissou1<-rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous"))
 pal_zissou2<-wesanderson::wes_palette("Zissou1", 10, type = "continuous")
 pal_zissou1
 
-# load the vector data for the whole ecosystem
+# load the vector data for the whole ecosystem, you take different layers from the geopackage 
 sf::st_layers("./2022_protected_areas/protected_areas.gpkg")
 protected_areas<-terra::vect("./2022_protected_areas/protected_areas.gpkg",
             layer="protected_areas_2022") # read protected area boundaries)
+protected_areas
 sf::st_layers("./2022_rivers/rivers_hydrosheds.gpkg")
 rivers<-terra::vect("./2022_rivers/rivers_hydrosheds.gpkg",
                     layer="rivers_hydrosheds")
@@ -64,15 +67,57 @@ elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
 
 # inspect the data 
 class(protected_areas)
-
+plot(protected_areas)
+plot(elevation)
+plot(protected_areas, add = T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
 xlimits<-c(550000,900000)
 ylimits<-c(9600000,9950000)
 
 # plot the woody biomass map that you want to predict
+ggplot() + 
+ tidyterra::geom_spatraster(data = woodybiom) +
+  scale_fill_gradientn(colours = rev(terrain.colors(6)),
+                       limits= c(0.77,6.55),
+                       oob = squish, 
+                       name = "Total basal area/ha") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, 
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", 
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes,
+                             fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea,
+                         linewidth = 0.8,
+                         fill = NA,
+                         col = "red")
+)
 
 # plot the rainfall map
+ggplot() + 
+  tidyterra::geom_spatraster(data = rainfall) +
+  scale_fill_gradientn(colours = rev(viridis::viridis(6)),
+                       limits= c(0, 2000),
+                       oob = squish, 
+                       name = "Mean annual rainfall (mm)") 
+
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, 
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", 
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes,
+                             fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea,
+                             linewidth = 0.8,
+                             fill = NA,
+                             col = "red")
+)
+
 
 # plot the elevation map
 
