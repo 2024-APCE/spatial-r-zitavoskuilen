@@ -58,6 +58,15 @@ sf::st_layers("./studyarea/studyarea.gpkg")
 studyarea<-terra::vect("./studyarea/studyarea.gpkg",
                               layer="my_study_area")
 
+sf::st_layers("./2022_roads/gsme_roads.gpkg")
+roads <-terra::vect("./2022_roads/gsme_roads.gpkg",
+                    layer="gsme_roads")
+           
+buildings <- terra::vect("./studyarea/drive-download-20241113T080356Z-001/buildings_study_area.shp")
+
+plot(buildings)
+
+
 
 # load the raster data for the whole ecosystem
 woodybiom<-terra::rast("./2016_WoodyVegetation/TBA_gam_utm36S.tif")
@@ -68,6 +77,7 @@ elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
 # inspect the data 
 class(protected_areas)
 plot(protected_areas)
+plot(roads)
 plot(elevation)
 plot(protected_areas, add = T)
 
@@ -186,8 +196,7 @@ woody_map_sa <- ggplot() +
            datum = sf::st_crs(32736)) + # set the limits of the map, expand = F so is is exactly the size of the study area
   labs(title = "Woody biomass") + # title of the plot 
   theme(axis.text = element_blank(),
-        axis.ticks = element_blank()) +
-  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+        axis.ticks = element_blank()) 
 
 # ---- end of woody biomass map ----
     
@@ -210,15 +219,16 @@ random_points <- sf::st_sample(studyarea_sf, size = npoints)
 
 # Add random points to your existing map
 woody_map_random_point <- woody_map_sa +
-  geom_sf(data = random_points, color = "red", size = 1.5) +
+  geom_sf(data = random_points, color = "red", size = 0.5) +
   labs(title = "Woody Map with Random Sample Points") +
-  coord_sf(xlimits, ylimits, expand = F,
-           datum = sf::st_crs(32736))
+  coord_sf(xlimits, ylimits, expand = F)
+
+plot(woody_map_random_point)
 
 ggsave("./figures/woody_map_random_point.png", woody_map_random_point, width = 20, height = 20, units = "cm", dpi = 300)  
 
 #########################
-### mkaing more maps with data relevant for predicting woody biomass
+### making more maps with data relevant for predicting woody biomass
 #########################
 
 # ---- Elevation map ----
@@ -382,22 +392,120 @@ NDVI_map <- ggplot() +
 # preview of map 
 NDVI_map
 
+# ---- rainfall wet season ----
+rainfall_wet_season <- terra::rast("./rainfall/ChirpsAnnualRainfall2001_2020_wet_season.tif")
 
+rainfall_wet_season_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = rainfall_wet_season) +
+  scale_fill_gradientn(colors = rev(viridis::viridis(10)),
+                       limits= c(738,1055),
+                       oob = squish, 
+                       name = "mm/year") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = F, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Rainfall wet season") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
 
+# ---- end of rainfall wet season map ----
 
+# preview of the map
+rainfall_wet_season_map
+
+# ---- rainfall dry season ----
+rainfall_dry_season <- terra::rast("./rainfall/ChirpsAnnualRainfall2001_2020_dry_season.tif")
+
+rainfall_dry_season_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = rainfall_dry_season) +
+  scale_fill_gradientn(colors = rev(viridis::viridis(10)),
+                       limits= c(481, 660),
+                       oob = squish, 
+                       name = "mm/year") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = F, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Rainfall dry season") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+
+# ---- end of rainfall dry season map ----
+
+# preview of the map
+rainfall_dry_season_map
+
+# ---- distance to buildings ----
+distance_to_buildings <- terra::rast("./2022_towns/DistanceToBuilding_01.tif")
+
+distance_to_buildings_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = distance_to_buildings) +
+  scale_fill_gradientn(colors = rev(pal_zissou1),
+                       limits = c(0, 18000),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "Distance to buildings (m)") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "Distance to buildings") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# ---- End of Distance to Buildings Map ----
+
+# Preview the map
+distance_to_buildings_map
 
 ### put all maps together
 
-composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + plot_layout(ncol = 2)
+
+# ---- distance to cropland ----
+distance_to_cropland <- terra::rast("./DistanceToCropland (1).tif")
+
+distance_to_cropland_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = distance_to_cropland) +
+  scale_fill_gradientn(colors = rev(pal_zissou1),
+                       limits = c(0, 1600),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "Distance to cropland (m)") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "Distance to cropland") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# ---- End of Distance to Cropland Map ----
+
+# preview of the map
+distance_to_cropland_map
+
+composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map
 composite_map_my_study_area
 
 ggsave("./figures/composite_map_my_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
 
 
-
-
-
 # extract your the values of the different raster layers to the points
+
+
 
 # make long format
 
