@@ -72,89 +72,332 @@ plot(elevation)
 plot(protected_areas, add = T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
-xlimits<-c(550000,900000)
-ylimits<-c(9600000,9950000)
+#xlimits<-c(550000,900000)
+#ylimits<-c(9600000,9950000)
+
+# set the limits of my own area 
+xlimits <- c(720000,770000)
+ylimits <- c(9760000,9790000)
+
 
 # plot the woody biomass map that you want to predict
-ggplot() + 
+woody_map <- ggplot() + 
  tidyterra::geom_spatraster(data = woodybiom) +
   scale_fill_gradientn(colours = rev(terrain.colors(6)),
                        limits= c(0.77,6.55),
                        oob = squish, 
-                       name = "Total basal area/ha") + 
+                       name = "Tree basal area/ha") + 
   tidyterra::geom_spatvector(data = protected_areas, 
-                             fill = NA, 
-                             linewidth = 0.5) +
-  tidyterra::geom_spatvector(data = rivers, 
-                             col = "blue", 
-                             linewidth = 0.5) +
-  tidyterra::geom_spatvector(data = lakes,
-                             fill = "lightblue") +
-  tidyterra::geom_spatvector(data = studyarea,
-                         linewidth = 0.8,
-                         fill = NA,
-                         col = "red")
-)
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+   # title of the plot
+  coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Woody biomass") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+                         
+woody_map
 
 # plot the rainfall map
-ggplot() + 
-  tidyterra::geom_spatraster(data = rainfall) +
-  scale_fill_gradientn(colours = rev(viridis::viridis(6)),
-                       limits= c(0, 2000),
+rainfall_map <- ggplot() + 
+ tidyterra::geom_spatraster(data = rainfall) +
+  scale_fill_gradientn(colours = pal_zissou1,,
+                       limits= c(364,2450),
                        oob = squish, 
-                       name = "Mean annual rainfall (mm)") 
-
+                       name = "mm/year") + 
   tidyterra::geom_spatvector(data = protected_areas, 
-                             fill = NA, 
-                             linewidth = 0.5) +
+                             fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, 
-                             col = "blue", 
-                             linewidth = 0.5) +
-  tidyterra::geom_spatvector(data = lakes,
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, 
                              fill = "lightblue") +
-  tidyterra::geom_spatvector(data = studyarea,
-                             linewidth = 0.8,
-                             fill = NA,
-                             col = "red")
-)
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Rainfall") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+
+rainfall_map
 
 
 # plot the elevation map
+elevation_map <- ggplot() + 
+ tidyterra::geom_spatraster(data = elevation) +
+  scale_fill_gradientn(colours = terrain.colors(10),
+                       limits= c(500,2100),
+                       oob = squish, 
+                       name = "Meters") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, 
+                             fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Elevation") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+
+elevation_map
 
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
 
+composite_map_study_area <-woody_map + elevation_map + rainfall_map + plot_layout(ncol = 2)
+composite_map_study_area
+
+# save the map to a high resolution png in the plots folder
+
+
+ggsave("./figures/composite_map_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
 
 ############################
 ### explore your study area
+
+
 # set the limits of your study area
 xlimits<-sf::st_bbox(studyarea)[c(1,3)]
 ylimits<-sf::st_bbox(studyarea)[c(2,4)]
 saExt<-terra::ext(studyarea)
 
-# crop the woody biomass to the extent of the studyarea
+# ---- woody biomass map ---- 
+woodybiom_sa <- terra::crop(woodybiom, saExt)
 
+woody_map_sa <- ggplot() + 
+ tidyterra::geom_spatraster(data = woodybiom_sa) +
+  scale_fill_gradientn(colours = rev(terrain.colors(6)),
+                       limits= c(0.77,6.55),
+                       oob = squish, 
+                       name = "Tree basal area/ha") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = F,
+           datum = sf::st_crs(32736)) + # set the limits of the map, expand = F so is is exactly the size of the study area
+  labs(title = "Woody biomass") + # title of the plot 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
 
-# plot the woody biomass
+# ---- end of woody biomass map ----
+    
+# preview of map                      
+woody_map_sa
 
-
-# make maps also for the other layers that you found
-
-# create 500 random points in our study area
-
+# create 500 random points in your study area
+set.seed(123)
+npoints <- 500
 
 # and add them to the previous map
+studyarea_sf <- sf::st_as_sf(studyarea)
 
-# make distance to river map
+# Set a seed for reproducibility and specify the number of points
+set.seed(123)
+npoints <- 500
+
+# Generate 500 random points within 'studyarea'
+random_points <- sf::st_sample(studyarea_sf, size = npoints)
+
+# Add random points to your existing map
+woody_map_random_point <- woody_map_sa +
+  geom_sf(data = random_points, color = "red", size = 1.5) +
+  labs(title = "Woody Map with Random Sample Points") +
+  coord_sf(xlimits, ylimits, expand = F,
+           datum = sf::st_crs(32736))
+
+ggsave("./figures/woody_map_random_point.png", woody_map_random_point, width = 20, height = 20, units = "cm", dpi = 300)  
+
+#########################
+### mkaing more maps with data relevant for predicting woody biomass
+#########################
+
+# ---- Elevation map ----
+elevation_sa <- terra::crop(elevation, saExt)
+
+elevation_map_sa <- ggplot() + 
+ tidyterra::geom_spatraster(data = elevation_sa) +
+  scale_fill_gradientn(colors = c("#7f9f7f", "#c2b280", "#b03a2e", "#2980b9", "#ffffff"),
+                       limits= c(500,2100),
+                       oob = squish, 
+                       name = "Meters") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, 
+                             fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = F, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Elevation") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+
+# end of elevation map ----
+
+# preview of the map 
+elevation_map_sa
+
+
+# ---- Rainfall map ----
+rainfall_sa <- terra::crop(rainfall, saExt)
+
+
+rainfall_map_sa <- ggplot() + 
+ tidyterra::geom_spatraster(data = rainfall_sa) +
+  scale_fill_gradientn(colors = rev(viridis::viridis(10)),
+                       limits= c(364,2450),
+                       oob = squish, 
+                       name = "mm/year") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = lakes, 
+                             fill = "lightblue") +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = F, datum = sf::st_crs(32736)) + # set the limits of the map)
+  labs(title = "Rainfall") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
+
+# ---- end of rainfall map ----
+
+# preview of the map 
+rainfall_map_sa
+
+
+# ----  Distance to River Map ----
+
+distance_to_river <- terra::rast("./2022_rivers/DistanceToRiver.tif")
+distance_to_river_map_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data = distance_to_river) +
+  scale_fill_gradientn(colours = rev(pal_zissou2),
+                       limits = c(0, 16238),
+                       oob = squish, 
+                       name = "Distance to river (m)") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "Distance to river") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# ---- End of Distance to River Map ----
+
+# Preview the map
+distance_to_river_map_sa
+
+# ---- Burn Frequency Map ----
+
+burn_frequency <- terra::rast("./fires/BurnFreq.tif")
+burn_frequency_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = burn_frequency) +
+  scale_fill_gradientn(colours = rev(pal_zissou2),
+                       limits = c(0, 23),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "Burn Frequency") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "Burn Frequency") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# ---- End of Burn Frequency Map ----
+
+# Preview the map
+burn_frequency_map
+
+# ---- CEC map ----
+
+CEC <- terra::rast("./CEC_5_15cm.tif")
+CEC_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = CEC) +
+  scale_fill_gradientn(colors = c("#8B4513", "#F0E68C", "#228B22"),
+                       limits = c(156, 357),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "CEC (soil fertility)") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "CEC") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# --- end of CEC map ----
+
+# preview of map 
+CEC_map
+
+
+# --- NDVI map ----
+
+NDVI <- terra::rast("./NDVI.tif")
+
+NDVI_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = NDVI, aes(fill = NDVI)) +
+  scale_fill_gradientn(colors = c("#A8E6A1", "#4CAF50", "#006400"),
+                       limits = c(0.09, 0.47),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "NDVI") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "NDVI") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# --- end of NDVI map ----  
+
+# preview of map 
+NDVI_map
+
+
 
 
 
 ### put all maps together
 
+composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + plot_layout(ncol = 2)
+composite_map_my_study_area
+
+ggsave("./figures/composite_map_my_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
+
+
+
 
 
 # extract your the values of the different raster layers to the points
-
 
 # make long format
 
