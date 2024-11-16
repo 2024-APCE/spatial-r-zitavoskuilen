@@ -24,7 +24,7 @@ library(patchwork)  # for combining multiple ggplots in one panel plot
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
 # Base R palettes
 barplot(rep(1,10), col = grey.colors(10))
-grey.colors()
+grey.colors(7)
 mycolors <- c("red", "white", "blue" )
 mycolors
 barplot(rep(1,30), col = rev(topo.colors(10))) # rev turns the scale arround
@@ -205,14 +205,14 @@ woody_map_sa
 
 # create 500 random points in your study area
 set.seed(123)
-npoints <- 500
+npoints <- 250
 
 # and add them to the previous map
 studyarea_sf <- sf::st_as_sf(studyarea)
 
 # Set a seed for reproducibility and specify the number of points
 set.seed(123)
-npoints <- 500
+npoints <- 250
 
 # Generate 500 random points within 'studyarea'
 random_points <- sf::st_sample(studyarea_sf, size = npoints)
@@ -261,8 +261,35 @@ elevation_map_sa
 
 
 # ---- Rainfall map ----
-rainfall_sa <- terra::crop(rainfall, saExt)
 
+rainfall_30m <- rast(terra::ext(rainfall), resolution = 30, crs = crs(rainfall))
+# Resample the raster to 30m resolution
+rainfall_30m <- terra::resample(rainfall, rainfall_30m, method = "bilinear")  
+rainfall_sa<-terra::crop(rainfall_30m,saExt) # crop to study area
+rainfall_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=rainfall_sa) +
+  scale_fill_gradientn(colours=pal_zissou1,
+                       limits= c(364,2450),,
+                       oob=squish,
+                       name="mm/yr") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Rainfall") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+rainfall_map_sa  
+
+## my old version (not with 30 m grid )
+rainfall_sa <- terra::crop(rainfall, saExt)
 
 rainfall_map_sa <- ggplot() + 
  tidyterra::geom_spatraster(data = rainfall_sa) +
@@ -295,10 +322,10 @@ rainfall_map_sa
 distance_to_river <- terra::rast("./2022_rivers/DistanceToRiver.tif")
 distance_to_river_map_sa <- ggplot() + 
   tidyterra::geom_spatraster(data = distance_to_river) +
-  scale_fill_gradientn(colours = rev(pal_zissou2),
-                       limits = c(0, 16238),
-                       oob = squish, 
-                       name = "Distance to river (m)") + 
+  scale_fill_gradientn(colours=topo.colors(6),
+                       limits=c(0,12000),
+                       oob=squish,
+                       name="Meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
@@ -320,10 +347,10 @@ distance_to_river_map_sa
 burn_frequency <- terra::rast("./fires/BurnFreq.tif")
 burn_frequency_map <- ggplot() + 
   tidyterra::geom_spatraster(data = burn_frequency) +
-  scale_fill_gradientn(colours = rev(pal_zissou2),
+  scale_fill_gradientn(colours = (pal_zissou2),
                        limits = c(0, 23),  # Adjust limits as appropriate for your data
                        oob = squish, 
-                       name = "Burn Frequency") + 
+                       name = "n years burned") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
@@ -469,8 +496,6 @@ distance_to_buildings_map <- ggplot() +
 # Preview the map
 distance_to_buildings_map
 
-### put all maps together
-
 
 # ---- distance to cropland ----
 distance_to_cropland <- terra::rast("./DistanceToCropland (1).tif")
@@ -497,18 +522,196 @@ distance_to_cropland_map <- ggplot() +
 # preview of the map
 distance_to_cropland_map
 
-composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map
+
+# ---- landform map ----
+landform_sa<-terra::rast("./landform/hills.tif")
+landform_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=as.factor(landform_sa)) +
+  scale_fill_manual(values=c("black","orange"),
+                    labels=c("valleys\nand\nplains","hills" )) +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.7) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="green") +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Landform") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+
+# ---- End of landform map ---- 
+
+# preview of the map
+landform_map_sa
+
+# ---- core protected ares map ----
+
+#? i do not have a tif file with the protected areas?  
+
+
+### put all maps together
+composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + plot_layout(ncol = 2)
 composite_map_my_study_area
 
 ggsave("./figures/composite_map_my_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
 
 
-# extract your the values of the different raster layers to the points
+##### end of map making 
 
+# create 250 random points
+set.seed(123)
+rpoints <- terra::spatSample(studyarea, size = 250, 
+                             method = "random")
+rpoints_map_sa<-ggplot() +
+  tidyterra::geom_spatvector(data=rpoints, size=0.5) +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="250 random points") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+rpoints_map_sa
+
+
+# add this map to the patchwork 
+
+all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + plot_layout(ncol = 3)
+
+all_maps
+
+ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
+
+
+# extract your the values of the different raster layers to the points
+woody_points <- terra::extract(woodybiom_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(woody=TBA_gam_utm36s)
+
+# points 
+woody_points
+
+dist2river_points <- terra::extract(distance_to_river, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(dist2river=distance)
+
+# points 
+dist2river_points
+
+
+elevation_points <- terra::extract(elevation, rpoints) |> 
+  as_tibble() 
+
+# points
+elevation_points
+
+# do not have this yet 
+CorProtAr_points <- terra::extract(CoreProtectedAreas_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(CorProtAr=CoreProtectedAreas)
+CorProtAr_points
+
+
+rainfall_points <- terra::extract(rainfall_sa, rpoints) |> 
+  as_tibble() |> 
+  dplyr::rename(rainfall=CHIRPS_MeanAnnualRainfall)
+rainfall_points
+
+cec_points <- terra::extract(CEC, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(cec='cec_5-15cm_mean')
+cec_points
+
+burnfreq_points <- terra::extract(burn_frequency, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(burnfreq=burned_sum)
+burnfreq_points
+
+landform_points <- terra::extract(landform_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(hills=remapped)
+landform_points
+
+### do this also for other maps i made 
+
+
+
+
+# merge the different variable into a single table
+# use woody biomass as the last variable
+pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
+                 rainfall_points[,2], 
+                 cec_points[,2],burnfreq_points[,2],
+                 landform_points[,2],woody_points[,2]) |>
+  as_tibble()
+pointdata
+
+
+# plot how woody cover is predicted by different variables
+# Create a correlation panel plot
+library(psych)
+psych::pairs.panels(
+  pointdata ,
+  method = "pearson",     # Correlation method (use "spearman" for rank correlation)
+  hist.col = "lightblue",  # Color for histograms
+  density = TRUE,          # Add density plots
+  ellipses = F,         # Add correlation ellipses
+  lm = TRUE,                # Add linear regression lines
+  stars=T
+)
 
 
 # make long format
+names(pointdata)
+pointdata_long<-pivot_longer(data=pointdata,
+                             cols = dist2river:hills, # all except woody
+                             names_to ="pred_var",
+                             values_to = "pred_val")
+pointdata_long
 
-# plot how woody cover is predicted by different variables
+# panel plot
+ggplot(data=pointdata_long, mapping=aes(x=pred_val,y=woody,group=pred_var)) +
+  geom_point() +
+  geom_smooth() +
+  ylim(0,40) +
+  facet_wrap(~pred_var,scales="free") 
 
+# do a pca
+# Load the vegan package
+library(vegan)
+# Perform PCA using the rda() function
+pca_result <- vegan::rda(pointdata,
+                         scale = TRUE)
+# Display a summary of the PCA
+summary(pca_result)
+
+# Plot the PCA
+plot(pca_result, scaling = 2, type="n", xlab="",ylab="")  # Use scaling = 1 for distance preservation, scaling = 2 for correlations
+# Add points for samples
+points(pca_result, display = "sites", pch=pointdata$CorProtAr+1, col = pointdata$hills+1, bg = "blue", cex = 1)
+# Add arrows for variables
+arrows(0, 0, scores(pca_result, display = "species")[, 1], scores(pca_result, display = "species")[, 2], 
+       length = 0.1, col = "red")
+# Label the variables with arrows
+text(scores(pca_result, display = "species")[, 1], scores(pca_result, display = "species")[, 2], 
+     labels = colnames(pointdata), col = "red", cex = 0.8, pos = 4)
+# Add axis labels and a title
+title(main = "PCA Biplot")
+xlabel <- paste("PC1 (", round(pca_result$CA$eig[1] / sum(pca_result$CA$eig) * 100, 1), "%)", sep = "")
+ylabel <- paste("PC2 (", round(pca_result$CA$eig[2] / sum(pca_result$CA$eig) * 100, 1), "%)", sep = "")
+title(xlab=xlabel)
+title(ylab=ylabel)
+# add contours for woody cover
+vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
+  
 
