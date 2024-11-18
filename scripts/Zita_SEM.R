@@ -2,7 +2,7 @@
 
 # analysis of Woody Cover
 # Paper:
-# browseURL("https://drive.google.com/file/d/1aasI7uIFj7zcjuu0A3QhPDU4X-oQtcnx/view?usp=sharing")
+# browseURL("https://docs.google.com/spreadsheets/d/1Lt7tkF0jlhDziYL5CUI58FvpNM7xnm4Vba9VGXCI5hE/edit?gid=0#gid=0")
 
 # restore libraries
 
