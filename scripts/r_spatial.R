@@ -625,29 +625,23 @@ woody_points <- terra::extract(woodybiom_sa, rpoints) |>
   as_tibble() |>
   dplyr::rename(woody=TBA_gam_utm36s)
 
-# points 
 woody_points
 
 dist2river_points <- terra::extract(distance_to_river, rpoints) |> 
   as_tibble() |>
   dplyr::rename(dist2river=distance)
 
-# points 
 dist2river_points
-
 
 elevation_points <- terra::extract(elevation, rpoints) |> 
   as_tibble() 
 
-# points
 elevation_points
 
-# do not have this yet 
 CorProtAr_points <- terra::extract(CoreProtectedAreas_sa, rpoints) |> 
   as_tibble() |>
   dplyr::rename(CorProtAr=CoreProtectedAreas)
 CorProtAr_points
-
 
 rainfall_points <- terra::extract(rainfall_sa, rpoints) |> 
   as_tibble() |> 
@@ -669,8 +663,13 @@ landform_points <- terra::extract(landform_sa, rpoints) |>
   dplyr::rename(hills=remapped)
 landform_points
 
-### do this also for other maps i made 
+distance_to_buildings_points <- terra::extract(distance_to_buildings, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(dist2buildings=distance)
 
+disatnce_to_cropland_points <- terra::extract(distance_to_cropland, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(dist2cropland=distance)
 
 
 
@@ -679,9 +678,16 @@ landform_points
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  rainfall_points[,2], CorProtAr_points[,2],
                  cec_points[,2],burnfreq_points[,2],
-                 landform_points[,2],woody_points[,2]) |>
+                 landform_points[,2],woody_points[,2],
+                 disatnce_to_cropland_points[,2],
+                 distance_to_buildings_points[,2])|>
   as_tibble()
+
 pointdata
+
+# made a csv file from all points to use in google sheeets 
+getwd()
+readr::write_csv(pointdata,"pointdata.csv")
 
 
 # plot how woody cover is predicted by different variables
