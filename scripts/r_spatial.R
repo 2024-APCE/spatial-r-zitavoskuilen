@@ -549,11 +549,38 @@ landform_map_sa
 
 # ---- core protected ares map ----
 
-#? i do not have a tif file with the protected areas?  
+r<-terra::rast("./2022_protected_areas/CoreProtectedAreas.tif") 
+CoreProtectedAreas_sa <- r |> #  replace NA by 0
+  is.na() |>
+  terra::ifel(0,r) 
+  
+CoreProtectedAreas_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=as.factor(CoreProtectedAreas_sa)) +
+  scale_fill_manual(values=c("grey","lightgreen"),
+                    labels=c("no","yes")) +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Core protected areas") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+
+# ---- end of core protected areas map ----
+
+# preview of the map
+CoreProtectedAreas_map_sa
 
 
 ### put all maps together
-composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + plot_layout(ncol = 2)
+composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + CoreProtectedAreas_map_sa + distance_to_cropland_map + landform_map_sa + plot_layout(ncol = 3)
 composite_map_my_study_area
 
 ggsave("./figures/composite_map_my_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
@@ -650,7 +677,7 @@ landform_points
 # merge the different variable into a single table
 # use woody biomass as the last variable
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
-                 rainfall_points[,2], 
+                 rainfall_points[,2], CorProtAr_points[,2],
                  cec_points[,2],burnfreq_points[,2],
                  landform_points[,2],woody_points[,2]) |>
   as_tibble()
