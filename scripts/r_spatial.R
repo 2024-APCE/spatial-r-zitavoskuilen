@@ -578,9 +578,36 @@ CoreProtectedAreas_map_sa<-ggplot() +
 # preview of the map
 CoreProtectedAreas_map_sa
 
+# ---- Slope map ----
+slope_sa <- terra::rast("./Slope_Map.tif")
+
+slope_map_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data = slope_sa) +
+  scale_fill_gradientn(colors = rev(viridis::viridis(10)),
+                       limits = c(0, 30),  # Adjust limits as appropriate for your data
+                       oob = squish, 
+                       name = "Slope (degrees)") + 
+  tidyterra::geom_spatvector(data = protected_areas, 
+                             fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, 
+                             col = "blue", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, 
+                             linewidth = 0.8, fill = NA, col = "red") +
+  coord_sf(xlimits, ylimits, expand = FALSE,
+           datum = sf::st_crs(32736)) + 
+  labs(title = "Slope") + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+# ---- end of slope map ----
+
+# preview of map 
+slope_map_sa
+
 
 ### put all maps together
-composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + CoreProtectedAreas_map_sa + distance_to_cropland_map + landform_map_sa + plot_layout(ncol = 3)
+composite_map_my_study_area <-woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + slope_map_sa + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + CoreProtectedAreas_map_sa + distance_to_cropland_map + landform_map_sa + plot_layout(ncol = 3)
 composite_map_my_study_area
 
 ggsave("./figures/composite_map_my_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
@@ -613,12 +640,12 @@ rpoints_map_sa
 
 # add this map to the patchwork 
 
-all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + plot_layout(ncol = 3)
+all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + slope_map_sa + plot_layout(ncol = 4)
 
 all_maps
 
-ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
 
+ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
 
 # extract your the values of the different raster layers to the points
 woody_points <- terra::extract(woodybiom_sa, rpoints) |> 
@@ -671,15 +698,21 @@ disatnce_to_cropland_points <- terra::extract(distance_to_cropland, rpoints) |>
   as_tibble() |>
   dplyr::rename(dist2cropland=distance)
 
+NDVI_points <- terra::extract(NDVI$NDVI, rpoints) |> 
+  as_tibble() 
 
+slope_points <- terra::extract(slope_sa, rpoints) |> 
+  as_tibble()
+
+slope_points
 
 # merge the different variable into a single table
 # use woody biomass as the last variable
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  rainfall_points[,2], CorProtAr_points[,2],
                  cec_points[,2],burnfreq_points[,2],
-                 landform_points[,2],woody_points[,2],
-                 disatnce_to_cropland_points[,2],
+                 landform_points[,2],woody_points[,2], slope_points[,2],
+                 disatnce_to_cropland_points[,2],NDVI_points[,2],
                  distance_to_buildings_points[,2])|>
   as_tibble()
 

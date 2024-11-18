@@ -17,7 +17,7 @@ library(lavaan)
 # dataset:
 browseURL("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOHGtB3_Ok0Zt4Afq4kfXC5j8RpBp_1lvIzzr6C1glSDAGlmYElHQ76s5HDWAPw85nLQ9v1MHMTBPG/pub?gid=2045022995&single=true&output=csv")
 # read the data from the google docs link:
-SEM_data<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOHGtB3_Ok0Zt4Afq4kfXC5j8RpBp_1lvIzzr6C1glSDAGlmYElHQ76s5HDWAPw85nLQ9v1MHMTBPG/pub?gid=2045022995&single=true&output=csv") 
+SEM_data<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOHGtB3_Ok0Zt4Afq4kfXC5j8RpBp_1lvIzzr6C1glSDAGlmYElHQ76s5HDWAPw85nLQ9v1MHMTBPG/pub?gid=844195483&single=true&output=csv") 
 
 SEM_data
 
@@ -29,21 +29,22 @@ SEM_data_std <- SEM_data |>
 
 SEM_data_std
 
-#### to here 
+#########
+#### OP MAANDAG GEMAAKT TOT HIER!! ####
+#########
+
 
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
-psych::pairs.panels(Anderson2007 %>% select(RES_LHU, BIOMASS,FIRE_FRQ,
-                                            NMS,LF_N),
+psych::pairs.panels(SEM_data %>% select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall,       CorProtAr, cec, NDVI, dist2buildings),
                     stars = T, ellipses = F)
-psych::pairs.panels(Anderson2007std %>% select(RES_LHU, BIOMASS,FIRE_FRQ,
-                                            NMS,LF_N),
+psych::pairs.panels(SEM_data_std %>% select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall,CorProtAr, cec, NDVI,dist2buildings),
                     stars = T, ellipses = F)
 
 # analyse the model (response ~ predictors) with a multiple regression approach 
 
-multreg_std <- lm(LF_N~RES_LHU + BIOMASS + FIRE_FRQ + NMS, data = Anderson2007std)
+multreg_std <- lm(woody~slope + rainfall + burnfreq + dist2river, data = SEM_data_std)
 summary(multreg_std)
 
 # visualization of the result: 
@@ -51,14 +52,14 @@ summary(multreg_std)
 
 # Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
 
-Leaf_N_model <- 'LF_N~BIOMASS + RES_LHU + FIRE_FRQ + NMS
-                BIOMASS~FIRE_FRQ + RES_LHU
-                NMS~FIRE_FRQ + RES_LHU'
-Leaf_N_model
+woody_model <- 'woody~slope + rainfall + burnfreq + dist2river + cec
+                cec~rainfall + burnfreq
+                dist2river~slope'
+woody_model
 
-Leaf_N_fit <- lavaan::sem(Leaf_N_model, data = Anderson2007std)
+woody_fit <- lavaan::sem(woody_model, data = SEM_data)
 # show the model results
-summary(Leaf_N_fit, standardized = T, fit.measures = T, rsquare = T)
+summary(woody_fit, standardized = T, fit.measures = T, rsquare = T)
 
 
 # goodness of fit (should be >0.9): CFI and TLI
