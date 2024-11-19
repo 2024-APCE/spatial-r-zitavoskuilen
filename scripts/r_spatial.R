@@ -640,7 +640,7 @@ rpoints_map_sa
 
 # add this map to the patchwork 
 
-all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + slope_map_sa + plot_layout(ncol = 4)
+all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + slope_map_sa + plot_layout(nrow = 5 )
 
 all_maps
 

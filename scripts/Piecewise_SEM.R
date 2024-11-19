@@ -3,7 +3,7 @@
 library(piecewiseSEM)
 
 # read the pointdata
-pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSgbmMwgqYtc_Vac7djGpaQucleD4ZsqyiDMDFHrboEbxqJi4W1LvyJDclFl-WlPxcu7x3HQ8guG2NF/pub?gid=0&single=true&output=csv")
+pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOHGtB3_Ok0Zt4Afq4kfXC5j8RpBp_1lvIzzr6C1glSDAGlmYElHQ76s5HDWAPw85nLQ9v1MHMTBPG/pub?gid=844195483&single=true&output=csv")
 pointdata <- pointdata_init |> # Remove rows with missing values
   na.omit() |>   # keep complete cases
   dplyr:: filter(woody>0, woody<20)   # remove 2 extreme values and avoid interpolated negative values
@@ -18,7 +18,7 @@ colSums(is.na(pointdata))
 psych::pairs.panels(pointdata,stars = T, ellipses = F)
 
 
-# Define the models
+   # Define the models
 # I started from this initially hypothesized causal scheme, my model 1)
 browseURL("https://docs.google.com/presentation/d/1PB8rhbswyPew-FYULsw1pIl8Jyb1FFElKPf34DZrEY8/edit?usp=sharing")
 
@@ -116,9 +116,12 @@ p8<-ggplot(data=pointdata,aes(y=rainfall,x=elevation))+
               se=T)
 p8
 
+names(pointdata)
+# model 
+
 # combine the figures
 library(patchwork)
-allplots<-p1+p2+p3+p4+p5+p6+p7+p8
+allplots<-p1+p2+p3+p4+p5+p6+p7+p8+
   patchwork::plot_layout(ncol=3) +
   patchwork::plot_annotation(title="Relations in model 1")
 allplots
