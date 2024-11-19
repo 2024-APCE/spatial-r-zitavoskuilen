@@ -62,9 +62,41 @@ woody_model <- 'woody~ rainfall + burnfreq + cec
                 dist2cropland~elevation'
 woody_model
 
-woody_fit <- lavaan::sem(woody_model, data = SEM_data)
+woody_fit <- lavaan::sem(woody_model, data = SEM_data_std)
 # show the model results
 summary(woody_fit, standardized = T, fit.measures = T, rsquare = T)
+
+woody_model2 <- 'woody~cec + burnfreq + rainfall
+                cec~rainfall + elevation + burnfreq
+                rainfall~elevation
+                burnfreq~rainfall'
+
+woody_model2
+               
+
+woody_fit2 <- lavaan::sem(woody_model2, data = SEM_data_std)
+summary(woody_fit2, standardized = T, fit.measures = T, rsquare = T)
+
+
+woody_model_3 <- 'woody~rainfall + CorProtAr + burnfreq
+                rainfall~ elevation
+                burnfreq~CorProtAr + elevation'
+
+
+woody_fit3 <- lavaan::sem(woody_model_3, data = SEM_data_std)
+summary(woody_fit3, standardized = T, fit.measures = T, rsquare = T)
+
+#best so far 
+
+woody_fit4 <- 'woody~ rainfall + CorProtAr
+                 rainfall~elevation
+                 burnfreq~CorProtAr + rainfall
+                 CorProtAr~elevation '
+woody_fit4 <- lavaan::sem(woody_fit4, data = SEM_data_std)
+summary(woody_fit4, standardized = T, fit.measures = T, rsquare = T)
+
+
+
 
 
 # goodness of fit (should be >0.9): CFI and TLI
