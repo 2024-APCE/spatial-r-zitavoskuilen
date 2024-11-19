@@ -28,6 +28,7 @@ SEM_data_std <- SEM_data |>
   as_tibble()
 
 SEM_data_std
+names(SEM_data_std)
 
 #########
 #### OP MAANDAG GEMAAKT TOT HIER!! ####
@@ -37,8 +38,10 @@ SEM_data_std
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
-psych::pairs.panels(SEM_data %>% select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall,       CorProtAr, cec, NDVI, dist2buildings),
+
+psych::pairs.panels(SEM_data, dplyr::select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall, CorProtAr, cec, NDVI, dist2buildings),
                     stars = T, ellipses = F)
+
 psych::pairs.panels(SEM_data_std %>% select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall,CorProtAr, cec, NDVI,dist2buildings),
                     stars = T, ellipses = F)
 
@@ -52,9 +55,11 @@ summary(multreg_std)
 
 # Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
 
-woody_model <- 'woody~slope + rainfall + burnfreq + dist2river + cec
-                cec~rainfall + burnfreq
-                dist2river~slope'
+woody_model <- 'woody~ rainfall + burnfreq + cec
+                cec~rainfall + burnfreq + dist2cropland
+                rainfall~elevation
+                burnfreq~dist2cropland + rainfall
+                dist2cropland~elevation'
 woody_model
 
 woody_fit <- lavaan::sem(woody_model, data = SEM_data)
@@ -66,17 +71,3 @@ summary(woody_fit, standardized = T, fit.measures = T, rsquare = T)
 # badness of fit: ( should be <0.1): RMSEA, SRMR
 
 
-# also explore the models as shown in fig 5b and 5c of the Anderson2007 paper
-# so repeat the model for leaf P content
-
-multreg_std_P <- lm(LF_P~RES_LHU + BIOMASS + FIRE_FRQ + NMS, data = Anderson2007std)
-summary(multreg_std_P)
-
-Leaf_P_model <- 'LF_P~BIOMASS + RES_LHU + FIRE_FRQ + NMS
-                BIOMASS~FIRE_FRQ + RES_LHU
-                NMS~FIRE_FRQ + RES_LHU'
-Leaf_P_model
-
-Leaf_P_fit <- lavaan::sem(Leaf_P_model, data = Anderson2007std)
-# show the model results
-summary(Leaf_P_fit, standardized = T, fit.measures = T, rsquare = T)

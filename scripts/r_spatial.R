@@ -82,15 +82,16 @@ plot(elevation)
 plot(protected_areas, add = T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
-#xlimits<-c(550000,900000)
-#ylimits<-c(9600000,9950000)
+xlimits<-c(550000,900000)
+ylimits<-c(9600000,9950000)
 
 # set the limits of my own area 
-xlimits <- c(720000,770000)
-ylimits <- c(9760000,9790000)
+#xlimits <- c(720000,770000)
+#ylimits <- c(9760000,9790000)
 
 
-# plot the woody biomass map that you want to predict
+# plot the woody biomass map that you want to predict 
+
 woody_map <- ggplot() + 
  tidyterra::geom_spatraster(data = woodybiom) +
   scale_fill_gradientn(colours = rev(terrain.colors(6)),
@@ -98,8 +99,8 @@ woody_map <- ggplot() +
                        oob = squish, 
                        name = "Tree basal area/ha") + 
   tidyterra::geom_spatvector(data = protected_areas, 
-                             fill = NA, linewidth = 0.5) +
-  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
+                             fill = NA, linewidth = 0.3) +
+  tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.1) +
   tidyterra::geom_spatvector(data = lakes, fill = "lightblue") +
   tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
    # title of the plot
@@ -119,9 +120,9 @@ rainfall_map <- ggplot() +
                        oob = squish, 
                        name = "mm/year") + 
   tidyterra::geom_spatvector(data = protected_areas, 
-                             fill = NA, linewidth = 0.5) +
+                             fill = NA, linewidth = 0.3) +
   tidyterra::geom_spatvector(data = rivers, 
-                             col = "blue", linewidth = 0.5) +
+                             col = "blue", linewidth = 0.1) +
   tidyterra::geom_spatvector(data = lakes, 
                              fill = "lightblue") +
   tidyterra::geom_spatvector(data = studyarea, 
@@ -143,9 +144,9 @@ elevation_map <- ggplot() +
                        oob = squish, 
                        name = "Meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
-                             fill = NA, linewidth = 0.5) +
+                             fill = NA, linewidth = 0.3) +
   tidyterra::geom_spatvector(data = rivers, 
-                             col = "blue", linewidth = 0.5) +
+                             col = "blue", linewidth = 0.1) +
   tidyterra::geom_spatvector(data = lakes, 
                              fill = "lightblue") +
   tidyterra::geom_spatvector(data = studyarea, 
@@ -161,11 +162,10 @@ elevation_map
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
 
-composite_map_study_area <-woody_map + elevation_map + rainfall_map + plot_layout(ncol = 2)
+composite_map_study_area <-elevation_map+ woody_map + rainfall_map + plot_layout(nrow = 1)
 composite_map_study_area
 
 # save the map to a high resolution png in the plots folder
-
 
 ggsave("./figures/composite_map_study_area.png", width = 20, height = 20, units = "cm", dpi = 300)
 
@@ -640,7 +640,7 @@ rpoints_map_sa
 
 # add this map to the patchwork 
 
-all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + rpoints_map_sa + slope_map_sa + plot_layout(nrow = 5 )
+all_maps <- woody_map_sa + distance_to_river_map_sa + rainfall_map_sa + elevation_map_sa + burn_frequency_map + CEC_map + NDVI_map + rainfall_dry_season_map + rainfall_wet_season_map + distance_to_buildings_map + distance_to_cropland_map + landform_map_sa + CoreProtectedAreas_map_sa + slope_map_sa + rpoints_map_sa + plot_layout(nrow = 5 )
 
 all_maps
 
@@ -726,7 +726,7 @@ readr::write_csv(pointdata,"pointdata.csv")
 # plot how woody cover is predicted by different variables
 # Create a correlation panel plot
 library(psych)
-psych::pairs.panels(
+correlation_panel_plot <- psych::pairs.panels(
   pointdata ,
   method = "pearson",     # Correlation method (use "spearman" for rank correlation)
   hist.col = "lightblue",  # Color for histograms
@@ -736,6 +736,8 @@ psych::pairs.panels(
   stars=T
 )
 
+# export the panels plot
+ggsave("./figures/correlation_panel_plot.png", width = 20, height = 20, units = "cm", dpi = 300)
 
 # make long format
 names(pointdata)
