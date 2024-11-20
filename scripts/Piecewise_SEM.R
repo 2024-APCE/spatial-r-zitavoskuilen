@@ -28,7 +28,7 @@ psych::pairs.panels(selected_data, stars = T, ellipses = F)
 browseURL("https://docs.google.com/presentation/d/1PB8rhbswyPew-FYULsw1pIl8Jyb1FFElKPf34DZrEY8/edit?usp=sharing")
 
 # Model 1: woody predicted by burnfreq and rainfall
-model_woody <- lm(woody ~ rainfall+burnfreq+elevation, 
+model_woody <- lm(woody ~ rainfall+burnfreq+elevation + CorProtAr, 
              data = pointdata)
 summary(model_woody)
 p1<-ggplot(data=pointdata,aes(x=burnfreq,y=woody))+

@@ -82,12 +82,12 @@ plot(elevation)
 plot(protected_areas, add = T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
-#xlimits<-c(550000,900000)
-#ylimits<-c(9600000,9950000)
+xlimits<-c(550000,900000)
+ylimits<-c(9600000,9950000)
 
 # set the limits of my own area 
-xlimits <- c(720000,770000)
-ylimits <- c(9760000,9790000)
+#xlimits <- c(720000,770000)
+#ylimits <- c(9760000,9790000)
 
 
 # plot the woody biomass map that you want to predict 
@@ -97,17 +97,19 @@ woody_map <- ggplot() +
   scale_fill_gradientn(colours = rev(terrain.colors(6)),
                        limits= c(0.77,6.55),
                        oob = squish, 
-                       name = "Tree basal area/ha") + 
+                       name = "TBA/ha") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.3) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.1) +
   tidyterra::geom_spatvector(data = lakes, fill = "lightblue") +
-  tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
+  tidyterra::geom_spatvector(data = studyarea, linewidth = 1.2, fill = NA, col = "red") +
    # title of the plot
   coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
   labs(title = "Woody biomass") +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank()) +
+  annotation_north_arrow(location = "tl", which_north = "true", 
+                         style = north_arrow_fancy_orienteering) +
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
                          
 woody_map
@@ -126,11 +128,13 @@ rainfall_map <- ggplot() +
   tidyterra::geom_spatvector(data = lakes, 
                              fill = "lightblue") +
   tidyterra::geom_spatvector(data = studyarea, 
-                             linewidth = 0.8, fill = NA, col = "red") +
+                             linewidth = 1.2, fill = NA, col = "red") +
   coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
   labs(title = "Rainfall") +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank()) +
+  annotation_north_arrow(location = "tl", which_north = "true", 
+                         style = north_arrow_fancy_orienteering) +
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
 
 rainfall_map
@@ -139,7 +143,7 @@ rainfall_map
 # plot the elevation map
 elevation_map <- ggplot() + 
  tidyterra::geom_spatraster(data = elevation) +
-  scale_fill_gradientn(colours = terrain.colors(10),
+  scale_fill_gradientn(colors = c("#7f9f7f", "#c2b280", "#b03a2e", "#2980b9", "#ffffff"),
                        limits= c(500,2100),
                        oob = squish, 
                        name = "Meters") + 
@@ -150,11 +154,13 @@ elevation_map <- ggplot() +
   tidyterra::geom_spatvector(data = lakes, 
                              fill = "lightblue") +
   tidyterra::geom_spatvector(data = studyarea, 
-                             linewidth = 0.8, fill = NA, col = "red") +
+                             linewidth = 1.2, fill = NA, col = "red") +
   coord_sf(xlimits, ylimits, datum = sf::st_crs(32736)) + # set the limits of the map)
   labs(title = "Elevation") +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank()) +
+  annotation_north_arrow(location = "tl", which_north = "true", 
+                         style = north_arrow_fancy_orienteering) +
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2) # add a scale bar
 
 elevation_map
@@ -162,7 +168,7 @@ elevation_map
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
 
-composite_map_study_area <-elevation_map+ woody_map + rainfall_map + plot_layout(nrow = 1)
+composite_map_study_area <-elevation_map+ rainfall_map + woody_map  + plot_layout(nrow = 1)
 composite_map_study_area
 
 # save the map to a high resolution png in the plots folder
@@ -239,7 +245,7 @@ elevation_map_sa <- ggplot() +
   scale_fill_gradientn(colors = c("#7f9f7f", "#c2b280", "#b03a2e", "#2980b9", "#ffffff"),
                        limits= c(500,2100),
                        oob = squish, 
-                       name = "Meters") + 
+                       name = "meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, 
@@ -325,7 +331,7 @@ distance_to_river_map_sa <- ggplot() +
   scale_fill_gradientn(colours=topo.colors(6),
                        limits=c(0,12000),
                        oob=squish,
-                       name="Meters") + 
+                       name="meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
@@ -375,14 +381,14 @@ CEC_map <- ggplot() +
   scale_fill_gradientn(colors = c("#8B4513", "#F0E68C", "#228B22"),
                        limits = c(156, 357),  # Adjust limits as appropriate for your data
                        oob = squish, 
-                       name = "CEC (soil fertility)") + 
+                       name = "mmol/gram") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
   tidyterra::geom_spatvector(data = studyarea, linewidth = 0.8, fill = NA, col = "red") +
   coord_sf(xlimits, ylimits, expand = FALSE,
            datum = sf::st_crs(32736)) + 
-  labs(title = "CEC") + 
+  labs(title = "Cation Exchange Capacity") + 
   theme(axis.text = element_blank(),
         axis.ticks = element_blank()) +
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
@@ -479,7 +485,7 @@ distance_to_buildings_map <- ggplot() +
   scale_fill_gradientn(colors = rev(pal_zissou1),
                        limits = c(0, 18000),  # Adjust limits as appropriate for your data
                        oob = squish, 
-                       name = "Distance to buildings (m)") + 
+                       name = "meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
@@ -505,7 +511,7 @@ distance_to_cropland_map <- ggplot() +
   scale_fill_gradientn(colors = rev(pal_zissou1),
                        limits = c(0, 1600),  # Adjust limits as appropriate for your data
                        oob = squish, 
-                       name = "Distance to cropland (m)") + 
+                       name = "meters") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, col = "blue", linewidth = 0.5) +
@@ -528,7 +534,8 @@ landform_sa<-terra::rast("./landform/hills.tif")
 landform_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=as.factor(landform_sa)) +
   scale_fill_manual(values=c("black","orange"),
-                    labels=c("valleys\nand\nplains","hills" )) +
+                    labels=c("valleys\nand\nplains","hills" ),
+                     name = NULL) +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.7) +
   tidyterra::geom_spatvector(data=studyarea,
@@ -557,7 +564,8 @@ CoreProtectedAreas_sa <- r |> #  replace NA by 0
 CoreProtectedAreas_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=as.factor(CoreProtectedAreas_sa)) +
   scale_fill_manual(values=c("grey","lightgreen"),
-                    labels=c("no","yes")) +
+                    labels=c("not protected","protected"),
+                    name = NULL) +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.5) +
   tidyterra::geom_spatvector(data=studyarea,
@@ -586,7 +594,7 @@ slope_map_sa <- ggplot() +
   scale_fill_gradientn(colors = rev(viridis::viridis(10)),
                        limits = c(0, 30),  # Adjust limits as appropriate for your data
                        oob = squish, 
-                       name = "Slope (degrees)") + 
+                       name = "degrees") + 
   tidyterra::geom_spatvector(data = protected_areas, 
                              fill = NA, linewidth = 0.5) +
   tidyterra::geom_spatvector(data = rivers, 
@@ -620,7 +628,7 @@ set.seed(123)
 rpoints <- terra::spatSample(studyarea, size = 250, 
                              method = "random")
 rpoints_map_sa<-ggplot() +
-  tidyterra::geom_spatvector(data=rpoints, size=0.5) +
+  tidyterra::geom_spatvector(data=rpoints, size=0.8) +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.5) +
   tidyterra::geom_spatvector(data=studyarea,
