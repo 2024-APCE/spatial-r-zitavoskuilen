@@ -1,6 +1,7 @@
 # Piecewise SEM
 
 library(piecewiseSEM)
+library(dplyr)
 
 # read the pointdata
 pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOHGtB3_Ok0Zt4Afq4kfXC5j8RpBp_1lvIzzr6C1glSDAGlmYElHQ76s5HDWAPw85nLQ9v1MHMTBPG/pub?gid=844195483&single=true&output=csv")
@@ -10,20 +11,24 @@ pointdata <- pointdata_init |> # Remove rows with missing values
 
 # note that you should not standardize your data for a PicewiseSEM as then eg logistic regression cannot be used
 
+pointdata
+
 # Check for missing values
 sum(is.na(pointdata))
 colSums(is.na(pointdata))
 
   
-psych::pairs.panels(pointdata,stars = T, ellipses = F)
+psych::pairs.panels(pointdata, stars = T, ellipses = F)
+selected_data <- pointdata |> dplyr::select(elevation, burnfreq, rainfall, CorProtAr, woody)
 
+psych::pairs.panels(selected_data, stars = T, ellipses = F)
 
 # Define the models
 # I started from this initially hypothesized causal scheme, my model 1)
 browseURL("https://docs.google.com/presentation/d/1PB8rhbswyPew-FYULsw1pIl8Jyb1FFElKPf34DZrEY8/edit?usp=sharing")
 
 # Model 1: woody predicted by burnfreq and rainfall
-model_woody <- lm(woody ~  cec +burnfreq, 
+model_woody <- lm(woody ~ rainfall+burnfreq+elevation, 
              data = pointdata)
 summary(model_woody)
 p1<-ggplot(data=pointdata,aes(x=burnfreq,y=woody))+
@@ -32,7 +37,7 @@ p1<-ggplot(data=pointdata,aes(x=burnfreq,y=woody))+
               formula= y~x,
               se=T)
 p1
-p2<-ggplot(data=pointdata,aes(x=cec,y=woody))+
+p2<-ggplot(data=pointdata,aes(x=rainfall,y=woody))+
   geom_point() +
   geom_smooth(method="lm",
 #              method.args=list(family=Gamma(link="log")),
@@ -41,7 +46,7 @@ p2<-ggplot(data=pointdata,aes(x=cec,y=woody))+
 p2
 
 # Model_burnfreq: burning frequency predicted by Core Protected Areas and Rainfall
-model_burnfreq_init <- glm(burnfreq ~ CorProtAr + rainfall, 
+model_burnfreq_init <- glm(burnfreq ~ CorProtAr + elevation + rainfall, 
               family=poisson, 
               data = pointdata)
 # Calculate dispersion statistic
@@ -51,7 +56,7 @@ dispersion_stat
 # If 𝜙>1 : Overdispersion is present → Consider quasi-Poisson or negative binomial.
 # If 𝜙<1 : Underdispersion (less common) → Investigate the data further.
 library(MASS)
-model_burnfreq <- MASS::glm.nb(burnfreq ~ CorProtAr + rainfall, 
+model_burnfreq <- MASS::glm.nb(burnfreq ~ CorProtAr + elevation + rainfall, 
               data = pointdata)
 summary(model_burnfreq)
 
@@ -62,7 +67,7 @@ p3<-ggplot(data=pointdata,aes(y=burnfreq,x=CorProtAr))+
               formula= y~x,
               se=T)
 p3
-p4<-ggplot(data=pointdata,aes(y=burnfreq,x=rainfall))+
+p4<-ggplot(data=pointdata,aes(y=burnfreq,x=elevation))+
   geom_jitter(width = 0.05, height = 0.1) +
   geom_smooth(method="glm",
               method.args=list(family=quasipoisson),
@@ -70,25 +75,27 @@ p4<-ggplot(data=pointdata,aes(y=burnfreq,x=rainfall))+
               se=T)
 p4
 
-# model_cec: predicted by rainfall
 
-model_cec <- lm(cec ~ rainfall + CorProtAr, 
+
+# model_rainfall: predicted by elevation
+
+model_rainfall <- lm(rainfall ~ elevation, 
                       data = pointdata)
-summary(model_cec)
+summary(model_rainfall)
 
-p5<-ggplot(data=pointdata,aes(y=cec,x=rainfall))+
+p5<-ggplot(data=pointdata,aes(y=rainfall,x=elevation))+
   geom_point() +
   geom_smooth(method="lm",
               formula= y~x,
               se=T)
 p5
 
-p6<-ggplot(data=pointdata,aes(y=cec,x=CorProtAr))+
+#p6<-ggplot(data=pointdata,aes(y=cec,x=CorProtAr))+
   geom_point() +
   geom_smooth(method="lm",
               formula= y~x,
               se=T)
-p6
+#p6
 
 
 # model_CorProtAra:  predicted by elevation
@@ -121,15 +128,14 @@ names(pointdata)
 
 # combine the figures
 library(patchwork)
-allplots<-p1+p2+p3+p4+p5+p6+p7+p8+
+allplots<-p1+p2+p3+p4+p5+p7+p8+
   patchwork::plot_layout(ncol=3) +
   patchwork::plot_annotation(title="Relations in model 1")
 allplots
 
 ####### Combine all models into a single piecewise SEM
 psem_model <- piecewiseSEM::psem(model_woody,
-                                 model_burnfreq,
-                                 model_cec,
+                                 model_burnfreq_init,
                                  model_CorProtAr,
                                  model_rainfall)
 

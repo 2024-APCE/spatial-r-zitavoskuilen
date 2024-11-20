@@ -39,7 +39,17 @@ names(SEM_data_std)
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
 
-psych::pairs.panels(SEM_data, dplyr::select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall, CorProtAr, cec, NDVI, dist2buildings),
+psych::pairs.panels(
+  SEM_data %>% dplyr::select(
+    dist2river, slope, burnfreq, elevation, dist2cropland, hills, 
+    rainfall, CorProtAr, cec, NDVI, dist2buildings, woody
+  ),
+  stars = TRUE,
+  ellipses = FALSE
+)
+
+
+psych::pairs.panels(data = SEM_data, (dist2river, slope, burnfreq, elevation, dist2cropland, hills, rainfall, CorProtAr, cec, NDVI, dist2buildings, woody),
                     stars = T, ellipses = F)
 
 psych::pairs.panels(SEM_data_std %>% select(dist2river, slope, burnfreq, elevation, woody, dist2cropland, hills, rainfall,CorProtAr, cec, NDVI,dist2buildings),
@@ -88,18 +98,24 @@ summary(woody_fit3, standardized = T, fit.measures = T, rsquare = T)
 
 #best so far 
 
-woody_fit4 <- 'woody~ rainfall + CorProtAr
-                 rainfall~elevation
-                 burnfreq~CorProtAr + rainfall
-                 CorProtAr~elevation '
-woody_fit4 <- lavaan::sem(woody_fit4, data = SEM_data_std)
+
+
+woody_model_4 <- 'woody~rainfall + CorProtAr + burnfreq
+                rainfall~ elevation
+                burnfreq~CorProtAr + elevation
+                CorProtAr~elevation'
+
+
+woody_fit4 <- lavaan::sem(woody_model_4, data = SEM_data_std)
 summary(woody_fit4, standardized = T, fit.measures = T, rsquare = T)
-
-
-
-
 
 # goodness of fit (should be >0.9): CFI and TLI
 # badness of fit: ( should be <0.1): RMSEA, SRMR
 
+summary(woody_fit5, standardized = T, fit.measures = T, rsquare = T)
 
+
+woody_fit5
+woody_model_5
+woody_model_4
+woody_model_3

@@ -82,12 +82,12 @@ plot(elevation)
 plot(protected_areas, add = T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
-xlimits<-c(550000,900000)
-ylimits<-c(9600000,9950000)
+#xlimits<-c(550000,900000)
+#ylimits<-c(9600000,9950000)
 
 # set the limits of my own area 
-#xlimits <- c(720000,770000)
-#ylimits <- c(9760000,9790000)
+xlimits <- c(720000,770000)
+ylimits <- c(9760000,9790000)
 
 
 # plot the woody biomass map that you want to predict 
