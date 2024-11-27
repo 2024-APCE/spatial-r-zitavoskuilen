@@ -150,7 +150,7 @@ summary(bm2)
 
 
 # Plot for all individuals with individual-specific predictions
-ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID))) +
+buzzard_plot_2 <- ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID))) +
   geom_point(alpha = 0.6) + # Actual data points
   geom_line(aes(y = LayingDate), alpha = 0.8) +  # Predicted lines
   labs(
@@ -163,15 +163,49 @@ ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID)))
   theme(legend.position = "none")
 
 
+# for jackdaw 
+
+jackdaw_data
+
+jm2 <- lmer(LDnumb ~ avgtemp + (1|FemID) + (1|Year), data = jackdaw_data)
+summary(jm2)
+
+# Plot for all individuals   
+jackdaw_plot_2 <- ggplot(jackdaw_data, aes(x = avgtemp, y = LDnumb, color = factor(FemID))) +
+  geom_point(alpha = 0.6) + # Actual data points
+  geom_line(aes(y = LDnumb), alpha = 0.8) +  # Predicted lines
+  labs(
+    title = "Effect of Temperature on Laying Date (Per Individual)",
+    x = "Average Temperature (°C)",
+    y = "Laying Date (Days after January 1)",
+    color = "Individual ID"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 
+# great tit 
 
+greattit_data
 
+gm2 <- lmer(LayingDate  ~ avgtemp + (1|RingID ) + (1|Year), data = greattit_data)
+summary(gm2)
 
+# Plot for all individuals 
+greattit_plot_2 <- ggplot(greattit_data, aes(x = avgtemp, y = LayingDate, color = factor(RingID))) +
+  geom_point(alpha = 0.6) + # Actual data points
+  geom_line(aes(y = LayingDate), alpha = 0.8) +  # Predicted lines
+  labs(
+    title = "Effect of Temperature on Laying Date (Per Individual)",
+    x = "Average Temperature (°C)",
+    y = "Laying Date (Days after January 1)",
+    color = "Individual ID"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-
-
-
+birds_laying_date_individual <- greattit_plot_2 + jackdaw_plot_2 + buzzard_plot_2 + plot_layout(nrow = 1)
+birds_laying_date_individual
 
 
 
