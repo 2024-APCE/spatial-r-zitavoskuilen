@@ -145,8 +145,22 @@ birds_laying_date
 
 buzzard_data
 
-bm2 <- glmer()
+bm2 <- lmer(LayingDate ~ avgtemp + (1|adult_ID) + (1|year), data = buzzard_data)
+summary(bm2)
 
+
+# Plot for all individuals with individual-specific predictions
+ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID))) +
+  geom_point(alpha = 0.6) + # Actual data points
+  geom_line(aes(y = LayingDate), alpha = 0.8) +  # Predicted lines
+  labs(
+    title = "Effect of Temperature on Laying Date (Per Individual)",
+    x = "Average Temperature (°C)",
+    y = "Laying Date (Days after January 1)",
+    color = "Individual ID"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 
 
