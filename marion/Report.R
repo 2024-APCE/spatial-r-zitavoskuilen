@@ -193,8 +193,8 @@ summary(gm2)
 
 # Plot for all individuals 
 greattit_plot_2 <- ggplot(greattit_data, aes(x = avgtemp, y = LayingDate, color = factor(RingID))) +
-  geom_point(alpha = 0.6) + # Actual data points
-  geom_line(aes(y = LayingDate), alpha = 0.8) +  # Predicted lines
+  geom_point(alpha = 0.6) +  # Actual data points
+  geom_line(aes(group = RingID), alpha = 0.8) +  # Connect points for the same individual
   labs(
     title = "Effect of Temperature on Laying Date (Per Individual)",
     x = "Average Temperature (°C)",
@@ -208,4 +208,22 @@ birds_laying_date_individual <- greattit_plot_2 + jackdaw_plot_2 + buzzard_plot_
 birds_laying_date_individual
 
 
+greattit_data <- greattit_data %>%
+  group_by(RingID) %>%
+  mutate(avgtemp_centered = avgtemp - mean(avgtemp, na.rm = TRUE)) %>%
+  ungroup()
+gm3 <- lmer(LayingDate ~ avgtemp_centered + (1 | RingID) + (1 | Year), data = greattit_data)
+summary(gm3)
+
+
+ggplot(greattit_data, aes(x = avgtemp_centered, y = LayingDate, color = factor(RingID))) +
+  geom_point(alpha = 0.6) +  # Observed data
+  geom_smooth(method = "lm", se = FALSE, aes(group = RingID), alpha = 0.4) +  # Individual trends
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 1.2) +  # Overall fixed effect
+  labs(
+    title = "Within-Individual Effects of Temperature on Laying Date",
+    x = "Centered Temperature (°C above individual mean)",
+    y = "Laying Date (Days after January 1)"
+  ) +
+  theme_minimal()
 
