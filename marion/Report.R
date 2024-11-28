@@ -145,22 +145,12 @@ birds_laying_date
 
 buzzard_data
 
+bm2x <- lmer(LayingDate ~ (1|adult_ID) + (1|year), data = buzzard_data)
+summary(bm2x)
+
 bm2 <- lmer(LayingDate ~ avgtemp + (1|adult_ID) + (1|year), data = buzzard_data)
 summary(bm2)
 
-
-# Plot for all individuals with individual-specific predictions
-buzzard_plot_2 <- ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID))) +
-  geom_point(alpha = 0.6) + # Actual data points
-  geom_line(aes(y = LayingDate), alpha = 0.8) +  # Predicted lines
-  labs(
-    title = "Effect of Temperature on Laying Date (Per Individual)",
-    x = "Average Temperature (°C)",
-    y = "Laying Date (Days after January 1)",
-    color = "Individual ID"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
 
 
 # for jackdaw 
@@ -170,18 +160,7 @@ jackdaw_data
 jm2 <- lmer(LDnumb ~ avgtemp + (1|FemID) + (1|Year), data = jackdaw_data)
 summary(jm2)
 
-# Plot for all individuals   
-jackdaw_plot_2 <- ggplot(jackdaw_data, aes(x = avgtemp, y = LDnumb, color = factor(FemID))) +
-  geom_point(alpha = 0.6) + # Actual data points
-  geom_line(aes(y = LDnumb), alpha = 0.8) +  # Predicted lines
-  labs(
-    title = "Effect of Temperature on Laying Date (Per Individual)",
-    x = "Average Temperature (°C)",
-    y = "Laying Date (Days after January 1)",
-    color = "Individual ID"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+
 
 
 # great tit 
@@ -196,13 +175,41 @@ greattit_plot_2 <- ggplot(greattit_data, aes(x = avgtemp, y = LayingDate, color 
   geom_point(alpha = 0.6) +  # Actual data points
   geom_line(aes(group = RingID), alpha = 0.8) +  # Connect points for the same individual
   labs(
-    title = "Effect of Temperature on Laying Date (Per Individual)",
+    title = "Great tit",
+    subtitle = "Effect of Temperature on Laying Date (Per Individual)",
     x = "Average Temperature (°C)",
     y = "Laying Date (Days after January 1)",
     color = "Individual ID"
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+
+jackdaw_plot_2 <- ggplot(jackdaw_data, aes(x = avgtemp, y = LDnumb, color = factor(FemID))) +
+  geom_point(alpha = 0.6) +  # Actual data points
+  geom_line(aes(group = FemID), alpha = 0.8) +  # Connect points for the same individual
+  labs(
+    title = "Jackdaw",
+    subtitle = "Effect of Temperature on Laying Date (Per Individual)",
+    x = "Average Temperature (°C)",
+    y = "Laying Date (Days after January 1)",
+    color = "Individual ID"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+buzzard_plot_2 <- ggplot(buzzard_data, aes(x = avgtemp, y = LayingDate, color = factor(adult_ID))) +
+  geom_point(alpha = 0.6) +  # Actual data points
+  geom_line(aes(group = adult_ID), alpha = 0.8) +  # Connect points for the same individual
+  labs(
+    title = "Buzzard",
+    subtitle = "Effect of Temperature on Laying Date (Per Individual)",
+    x = "Average Temperature (°C)",
+    y = "Laying Date (Days after January 1)",
+    color = "Individual ID"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
 
 birds_laying_date_individual <- greattit_plot_2 + jackdaw_plot_2 + buzzard_plot_2 + plot_layout(nrow = 1)
 birds_laying_date_individual
@@ -212,18 +219,144 @@ greattit_data <- greattit_data %>%
   group_by(RingID) %>%
   mutate(avgtemp_centered = avgtemp - mean(avgtemp, na.rm = TRUE)) %>%
   ungroup()
-gm3 <- lmer(LayingDate ~ avgtemp_centered + (1 | RingID) + (1 | Year), data = greattit_data)
+
+greattit_data$binnenInd<-greattit_data$avgtemp-greattit_data$avgtemp_centered
+
+gm3 <- lmer(LayingDate ~ binnenInd+avgtemp_centered + (1 | RingID), data = greattit_data)
 summary(gm3)
 
+gm4 <- lmer(LayingDate ~ Year + (1 | RingID)+(1|Year), data = greattit_data)
+summary(gm4)
 
-ggplot(greattit_data, aes(x = avgtemp_centered, y = LayingDate, color = factor(RingID))) +
-  geom_point(alpha = 0.6) +  # Observed data
-  geom_smooth(method = "lm", se = FALSE, aes(group = RingID), alpha = 0.4) +  # Individual trends
-  geom_smooth(method = "lm", se = FALSE, color = "black", size = 1.2) +  # Overall fixed effect
-  labs(
-    title = "Within-Individual Effects of Temperature on Laying Date",
-    x = "Centered Temperature (°C above individual mean)",
-    y = "Laying Date (Days after January 1)"
-  ) +
+
+# zero models 
+# great tit 
+gm0 <- lmer(LayingDate ~  (1 | RingID)+(1|Year), data = greattit_data)
+summary(gm0)
+
+# buzzzard
+bm0 <- lmer(LayingDate ~  (1 | adult_ID) + (1|year), data = buzzard_data)
+summary(bm0)
+confint(bm0)
+
+# jackdaw 
+jm0 <- lmer(LDnumb ~ (1| FemID) + (1|Year), data= jackdaw_data)
+summary(jm0)
+confint(jm0)
+
+### adding  year as a fixed factor 
+
+class(buzzard_data$year)
+class(jackdaw_data$Year)
+jackdaw_data$Year <- as.integer(jackdaw_data$Year)
+greattit_data$Year <- as.integer(greattit_data$Year)
+buzzard_data$year <- as.integer(buzzard_data$year)
+
+gm.y <- lmer(LayingDate ~ Year + (1 | RingID) + (1|Year), data = greattit_data)
+summary(gm.y)
+confint(gm.y)
+
+jm.y <- lmer(LDnumb ~ Year+ (1| FemID) + (1|Year) , data= jackdaw_data)
+summary(jm.y)
+confint(jm.y)
+
+bm.y <- lmer(LayingDate ~ year + (1| adult_ID) + (1|year), data = buzzard_data)
+summary(bm.y)
+confint(bm.y)
+
+### adding temperature as a fixed factor 
+
+gm.t <- lmer(LayingDate ~ avgtemp + (1| RingID) + (1|Year), data = greattit_data )
+summary(gm.y.t)
+confint(gm.y.t)
+
+jm.t <- lmer(LDnumb ~ avgtemp + (1| FemID) + (1|Year) , data= jackdaw_data)
+summary(jm.t)
+confint(jm.t)
+
+bm.t <- lmer(LayingDate ~ avgtemp + (1| adult_ID) + (1|year), data = buzzard_data)
+summary(bm.t)
+confint(bm.t)
+
+### within and between individual effects
+### great tit 
+
+# Step 1: Create "Between-Individual" Temperature Variable
+ind_avg_g <- aggregate(avgtemp ~ RingID, data = greattit_data, FUN = mean)
+greattit_data <- merge(greattit_data, ind_avg_g, by = "RingID", suffixes = c("", "_between"))
+
+# Step 2: Create "Within-Individual" Temperature Variable
+greattit_data$avgtemp_within <- greattit_data$avgtemp - greattit_data$avgtemp_between
+
+# Step 3: Fit the Mixed Model
+gm6 <- lmer(LayingDate ~ avgtemp_within + avgtemp_between + (1 | RingID) + (1 | Year), data = greattit_data)
+summary(gm6)
+confint(gm6)
+
+
+### jackdaw
+
+head(jackdaw_data)
+
+# Step 1: Create "Between-Individual" Temperature Variable
+ind_avg_j <- aggregate(avgtemp ~ FemID , data = jackdaw_data, FUN = mean)
+jackdaw_data <- merge(jackdaw_data, ind_avg_j, by = "FemID", suffixes = c("", "_between"))
+
+# Step 2: Create "Within-Individual" Temperature Variable
+jackdaw_data$avgtemp_within <- jackdaw_data$avgtemp - jackdaw_data$avgtemp_between
+
+# Step 3: Fit the Mixed Model
+gm7 <- lmer(LDnumb  ~ avgtemp_within + avgtemp_between + (1 | FemID) + (1 | Year), data = jackdaw_data)
+summary(gm7)
+confint(gm7)
+
+### buzzard
+ind_avg_b <- aggregate(avgtemp ~ adult_ID, data = buzzard_data, FUN = mean)
+buzzard_data <- merge(buzzard_data, ind_avg_b, by = "adult_ID", suffixes = c("", "_between"))
+
+# Step 2: Create "Within-Individual" Temperature Variable
+buzzard_data$avgtemp_within <- buzzard_data$avgtemp - buzzard_data$avgtemp_between
+
+# Step 3: Fit the Mixed Model
+bm6 <- lmer(LayingDate ~ avgtemp_within + avgtemp_between + (1 | adult_ID) + (1 | year), data = buzzard_data)
+summary(bm6)
+confint(bm6)
+
+### making a figure with the temperature 
+# with temperature on the y axis and year on the x axis for all species in one plot
+
+a <- ggplot(greattit_data, aes(x = Year, y = avgtemp)) + 
+  geom_point()+ 
+  geom_line(col = "red") 
+
+b <- ggplot(jackdaw_data, aes(x = Year, y = avgtemp)) +
+  geom_point() + 
+  geom_line(col = "blue")
+
+c <-ggplot(buzzard_data, aes(x = year, y = avgtemp)) +
+  geom_point() + 
+  geom_line(col = "green")
+
+# put these plots together in one plot 
+
+a + b + c
+colnames(buzzard_data)[colnames(buzzard_data) == "year"] <- "Year"
+
+greattit_data$Species <- "Great Tit"
+jackdaw_data$Species <- "Jackdaw"
+buzzard_data$Species <- "Buzzard"
+
+combined_data <- rbind(
+  greattit_data[, c("Year", "avgtemp", "Species")],
+  jackdaw_data[, c("Year", "avgtemp", "Species")],
+  buzzard_data[, c("Year", "avgtemp", "Species")] # Ensure column names match
+)
+
+ggplot(combined_data, aes(x = Year, y = avgtemp, color = Species)) +
+  geom_point() +
+  geom_line(alpha = 0.8, size = 1.2) +  # Adjust alpha for transparency
+  labs(title = "Average Temperature by Year for Different Species",
+       x = "Year",
+       y = "Average Temperature") +
   theme_minimal()
 
